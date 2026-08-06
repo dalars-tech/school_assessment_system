@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Assessment Results</title>
+</head>
+<body>
+  <h1>School Assessment Results</h1>
+
+  <p>Enter your School ID to view your assessment result.</p>
+
+  <input type="text" id="schoolId" placeholder="School ID">
+  <button onclick="searchResult()">Search</button>
+
+  <div id="result"></div>
+
+  <script>
+    function searchResult() {
+      const schoolId = document.getElementById("schoolId").value.trim();
+      const result = document.getElementById("result");
+
+      if (!schoolId) {
+        result.innerHTML = "<p>Please enter your School ID.</p>";
+        return;
+      }
+
+      result.innerHTML =
+        "<p>Searching for results for School ID: <strong>" +
+        schoolId +
+        "</strong></p>";
+    }
+  </script>
+</body>
+</html>
