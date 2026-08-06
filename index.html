@@ -3,33 +3,119 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>School Assessment Results</title>
+  <title>Student Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>School Assessment Results</h1>
 
-  <p>Enter your School ID to view your assessment result.</p>
+  <h1>Student Results</h1>
 
-  <input type="text" id="schoolId" placeholder="School ID">
-  <button onclick="searchResult()">Search</button>
+  <label for="schoolId">School ID</label>
+  <input
+    type="text"
+    id="schoolId"
+    placeholder="Enter School ID"
+  >
 
-  <div id="result"></div>
+  <button onclick="searchResults()">Search</button>
+
+  <div id="message"></div>
+  <div id="results"></div>
 
   <script>
-    function searchResult() {
+    const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co";
+
+    async function searchResults() {
       const schoolId = document.getElementById("schoolId").value.trim();
-      const result = document.getElementById("result");
+      const message = document.getElementById("message");
+      const results = document.getElementById("results");
+
+      results.innerHTML = "";
 
       if (!schoolId) {
-        result.innerHTML = "<p>Please enter your School ID.</p>";
+        message.textContent = "Please enter a School ID.";
         return;
       }
 
-      result.innerHTML =
-        "<p>Searching for results for School ID: <strong>" +
-        schoolId +
-        "</strong></p>";
+      message.textContent = "Searching...";
+
+      try {
+        const response = await fetch(
+          ${SUPABASE_URL}/rest/v1/learners?school_id=eq.${encodeURIComponent(schoolId)},
+          {
+            method: "GET",
+            headers: {
+              "apikey": "sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy",
+              "Authorization": "Bearer sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy"
+            }
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+
+        const data = await response.json();
+
+        if (data.length === 0) {
+          message.textContent = "No learner records found for this School ID.";
+          return;
+        }
+
+        message.textContent = Found ${data.length} learner record(s).;
+
+        data.forEach((learner) => {
+          const box = document.createElement("div");
+          box.className = "result";
+
+          box.innerHTML = `
+            <strong>Learner:</strong> ${learner.full_name ?? "N/A"}<br>
+            <strong>School ID:</strong> ${learner.school_id ?? "N/A"}<br>
+            <strong>Grade:</strong> ${learner.grade ?? "N/A"}
+          `;
+
+          results.appendChild(box);
+        });
+
+      } catch (error) {
+        console.error(error);
+        message.textContent =
+          "Unable to connect to the results database.";
+      }
     }
   </script>
+
 </body>
 </html>
