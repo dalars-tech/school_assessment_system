@@ -4,69 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Results</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 500px;
-      margin: 50px auto;
-      padding: 20px;
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      box-sizing: border-box;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    #result {
-      margin-top: 20px;
-    }
-  </style>
 </head>
 
 <body>
 
   <h1>Student Results</h1>
 
-  <label for="schoolId">School ID</label>
-
-  <input
-    type="text"
-    id="schoolId"
-    placeholder="Enter your School ID"
-  >
+  <input id="schoolId" type="text" placeholder="Enter Assessment Number">
 
   <button id="searchButton">Search</button>
 
   <div id="result"></div>
 
   <script>
-    const SUPABASE_URL =
-      "https://dduxprtjexkcuauahuwn.supabase.co";
+    const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co";
 
     const SUPABASE_KEY =
       "sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy";
 
+    const input = document.getElementById("schoolId");
     const button = document.getElementById("searchButton");
-    const schoolIdInput = document.getElementById("schoolId");
     const result = document.getElementById("result");
 
     button.addEventListener("click", async function () {
 
-      const schoolId = schoolIdInput.value.trim();
+      const assessmentNumber = input.value.trim();
 
-      if (!schoolId) {
-        result.innerHTML = "<p>Please enter your School ID.</p>";
+      if (!assessmentNumber) {
+        result.innerHTML = "<p>Please enter your Assessment Number.</p>";
         return;
       }
 
@@ -74,53 +39,50 @@
 
       try {
 
-        const response = await fetch(
+        const url =
           SUPABASE_URL +
-          "/rest/v1/%22Learners%22?assessment_number=eq." +
-          encodeURIComponent(schoolId),
-          {
-            method: "GET",
-            headers: {
-              "apikey": SUPABASE_KEY,
-              "Authorization": "Bearer " + SUPABASE_KEY
-            }
+          '/rest/v1/%22Learners%22?assessment_number=eq.' +
+          encodeURIComponent(assessmentNumber);
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + SUPABASE_KEY
           }
-        );
+        });
+
+        const text = await response.text();
 
         if (!response.ok) {
-          throw new Error("Database request failed");
+          throw new Error(text);
         }
 
-        const learners = await response.json();
+        const learners = JSON.parse(text);
 
         if (learners.length === 0) {
-          result.innerHTML =
-            "<p>No learner found for this School ID.</p>";
+          result.innerHTML = "<p>No learner found.</p>";
           return;
         }
 
-        result.innerHTML = "";
+        const learner = learners[0];
 
-        learners.forEach(function (learner) {
+        result.innerHTML = `
+          <h2>${learner["Learner name"] || ""}</h2>
+          <p><strong>Assessment Number:</strong> ${learner.assessment_number || ""}</p>
+          <p><strong>Grade:</strong> ${learner.Grade || ""}</p>
+          <p><strong>Class:</strong> ${learner.Class || ""}</p>
+        `;
 
-          const card = document.createElement("div");
+      } catch (error) {
 
-          card.innerHTML = `
-            <h2>${learner.full_name || "Learner"}</h2>
-            <p><strong>School ID:</strong> ${learner.school_id || ""}</p>
-            <p><strong>Grade:</strong> ${learner.grade || ""}</p>
-          `;
+        console.error(error);
 
-          result.appendChild(card);
+        result.innerHTML =
+          "<p>Database error: " + error.message + "</p>";
+      }
 
-        });
-
-      } 
-
-    });catch (error) {
-    console.error("Database error:", error);
-    result.innerHTML = "<p>Database error: " + error.message + "</p>";
-}
+    });
   </script>
 
 </body>
