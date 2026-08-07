@@ -41,7 +41,7 @@
 
         const url =
           SUPABASE_URL +
-          '/rest/v1/%22Learners%22?assessment_number=eq.' +
+          '/rest/v1/learners?assessment_number=eq.' +
           encodeURIComponent(assessmentNumber);
 
         const response = await fetch(url, {
