@@ -56,17 +56,54 @@
   <script>
     const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co";
 
-    async function searchResults() {
-      const schoolId = document.getElementById("schoolId").value.trim();
-      const message = document.getElementById("message");
-      const results = document.getElementById("results");
+    async function searchResult() {
+  const schoolId = document.getElementById("schoolId").value.trim();
+  const result = document.getElementById("result");
 
-      results.innerHTML = "";
+  if (!schoolId) {
+    result.innerHTML = "<p>Please enter your School ID.</p>";
+    return;
+  }
 
-      if (!schoolId) {
-        message.textContent = "Please enter a School ID.";
-        return;
+  result.innerHTML = "<p>Searching...</p>";
+
+  try {
+    const response = await fetch(
+      "https://dduxprtjexkcuauahuwn.supabase.co/rest/v1/learners?school_id=eq." +
+      encodeURIComponent(schoolId),
+      {
+        method: "GET",
+        headers: {
+          "apikey": "sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy",
+          "Authorization": "Bearer sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy"
+        }
       }
+    );
+
+    if (!response.ok) {
+      throw new Error("Database request failed");
+    }
+
+    const learners = await response.json();
+
+    if (learners.length === 0) {
+      result.innerHTML = "<p>No learner found for this School ID.</p>";
+      return;
+    }
+
+    result.innerHTML = learners.map(learner => `
+      <div>
+        <h3>${learner.full_name || "Learner"}</h3>
+        <p>School ID: ${learner.school_id || ""}</p>
+        <p>Grade: ${learner.grade || ""}</p>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    console.error(error);
+    result.innerHTML = "<p>Unable to connect to the database.</p>";
+  }
+}
 
       message.textContent = "Searching...";
 
