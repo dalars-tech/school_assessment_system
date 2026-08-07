@@ -4,47 +4,90 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Results</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    input, button {
+      padding: 12px;
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    input {
+      width: 90%;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      font-weight: bold;
+    }
+
+    .error {
+      margin-top: 15px;
+    }
+  </style>
 </head>
 
 <body>
 
   <h1>Student Results</h1>
 
-  <input id="schoolId" type="text" placeholder="Enter Assessment Number">
+  <input
+    type="text"
+    id="assessmentNumber"
+    placeholder="Enter assessment number"
+  >
 
-  <button id="searchButton">Search</button>
+  <button onclick="searchResult()">Search</button>
 
   <div id="result"></div>
 
   <script>
-    const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co";
+    const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co/rest/v1/";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkdXhwcnRqZXhrY3VhdWFodXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDU4MDUsImV4cCI6MjEwMTU4MTgwNX0._xA0xWEoEEN5-fo01QmyUuq3rNiHtRpqFY9fQyIqsJA";
 
-    const SUPABASE_KEY =
-      "sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy";
-
-    const input = document.getElementById("schoolId");
-    const button = document.getElementById("searchButton");
-    const result = document.getElementById("result");
-
-    button.addEventListener("click", async function () {
-
-      const assessmentNumber = input.value.trim();
-
-      if (!assessmentNumber) {
-        result.innerHTML = "<p>Please enter your Assessment Number.</p>";
-        return;
-      }
+    async function searchResult() {
+      const result = document.getElementById("result");
+      const assessmentNumber =
+        document.getElementById("assessmentNumber").value.trim();
 
       result.innerHTML = "<p>Searching...</p>";
 
       try {
+        if (!assessmentNumber) {
+          result.innerHTML = "<p>Please enter an assessment number.</p>";
+          return;
+        }
 
-        const url =
+        /* Find learner */
+        const learnerUrl =
           SUPABASE_URL +
-          '/rest/v1/learners?assessment_number=eq.' +
-          encodeURIComponent(assessmentNumber);
+          "/rest/v1/learners?assessment_number=eq." +
+          encodeURIComponent(assessmentNumber) +
+          "&select=id,school_id,assessment_number,learner_name,grade,class";
 
-        const response = await fetch(url, {
+        const learnerResponse = await fetch(learnerUrl, {
           method: "GET",
           headers: {
             "apikey": SUPABASE_KEY,
@@ -52,87 +95,104 @@
           }
         });
 
-        const text = await response.text();
-
-        if (!response.ok) {
-          throw new Error(text);
+        if (!learnerResponse.ok) {
+          throw new Error(await learnerResponse.text());
         }
 
-        const learners = JSON.parse(text);
+        const learners = await learnerResponse.json();
 
-        if (learners.length === 0) {
-          result.innerHTML = "<p>No learner found.</p>";
+        if (!learners.length) {
+          result.innerHTML = "<p>Learner not found.</p>";
           return;
         }
 
-       const learner = learners[0];
+        const learner = learners[0];
 
-const resultsUrl =
-  SUPABASE_URL +
-  "/rest/v1/Results?learner_id=eq." +
-  encodeURIComponent(learner.id) +
-  "&select=learning_area,points,Rubric_Code,term,year";
+        /* Find results using John's learner ID */
+        const resultsUrl =
+          SUPABASE_URL +
+          "/rest/v1/Results?learner_id=eq." +
+          encodeURIComponent(learner.id) +
+          "&select=learner_id,learning_area,points,Rubric_Code,term,year";
 
-const resultsResponse = await fetch(resultsUrl, {
-  method: "GET",
-  headers: {
-    "apikey": SUPABASE_KEY,
-    "Authorization": "Bearer " + SUPABASE_KEY
-  }
-});
+        const resultsResponse = await fetch(resultsUrl, {
+          method: "GET",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + SUPABASE_KEY
+          }
+        });
 
-if (!resultsResponse.ok) {
-  throw new Error(await resultsResponse.text());
-}
+        if (!resultsResponse.ok) {
+          throw new Error(await resultsResponse.text());
+        }
 
-const learnerResults = await resultsResponse.json();
+        const learnerResults = await resultsResponse.json();
 
-let resultsHTML = "";
+        let resultsHTML = "";
 
-if (learnerResults.length === 0) {
-  resultsHTML = "<p>No results found.</p>";
-} else {
- result.innerHTML = `
-  <h2>${learner.learner_name || ""}</h2>
-  <p><strong>Assessment Number:</strong> ${learner.assessment_number || ""}</p>
-  <p><strong>Grade:</strong> ${learner.grade || ""}</p>
-  <p><strong>Class:</strong> ${learner.class || ""}</p>
+        if (learnerResults.length === 0) {
+          resultsHTML = "<p>No results found.</p>";
+        } else {
+          resultsHTML = `
+            <h3>Results</h3>
 
-  <h3>Results</h3>
+            <table>
+              <tr>
+                <th>Learning Area</th>
+                <th>Points</th>
+                <th>Rubric Code</th>
+                <th>Term</th>
+                <th>Year</th>
+              </tr>
 
-  <div>
-    ${
-      learnerResults && learnerResults.length
-        ? learnerResults.map(r => `
+              ${learnerResults.map(r => `
+                <tr>
+                  <td>${r.learning_area || ""}</td>
+                  <td>${r.points ?? ""}</td>
+                  <td>${r.Rubric_Code || ""}</td>
+                  <td>${r.term || ""}</td>
+                  <td>${r.year || ""}</td>
+                </tr>
+              `).join("")}
+            </table>
+          `;
+        }
+
+        result.innerHTML = `
+          <h2>${learner.learner_name || ""}</h2>
+
           <p>
-            <strong>${r.learning_area || ""}</strong>:
-            ${r.points ?? ""} points
-            ${r.Rubric_Code ? " — " + r.Rubric_Code : ""}
+            <strong>Assessment number:</strong>
+            ${learner.assessment_number || ""}
           </p>
-        `).join("")
-        : "<p>No results found.</p>"
-    }
-  </div>
-`;
-}
 
-result.innerHTML = `
-  <h2>${learner.learner_name || learner["Learner name"] || ""}</h2>
-  <p><strong>Assessment Number:</strong> ${learner.assessment_number || ""}</p>
-  <p><strong>Grade:</strong> ${learner.grade || ""}</p>
-  <p><strong>Class:</strong> ${learner.class || ""}</p>
-  ${resultsHTML}
-`;
+          <p>
+            <strong>Grade:</strong>
+            ${learner.grade || ""}
+          </p>
+
+          <p>
+            <strong>Class:</strong>
+            ${learner.class || ""}
+          </p>
+
+          ${resultsHTML}
+        `;
 
       } catch (error) {
-
         console.error(error);
 
-        result.innerHTML =
-          "<p>Database error: " + error.message + "</p>";
+        result.innerHTML = `
+          <p class="error">
+            Unable to connect to database.
+          </p>
+          <p class="error">
+            ${error.message || ""}
+          </p>
+        `;
       }
-
-    });
+    }
   </script>
 
 </body>
