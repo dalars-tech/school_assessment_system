@@ -76,7 +76,7 @@
 
         const response = await fetch(
           SUPABASE_URL +
-          "/rest/v1/Learners?school_id=eq." +
+          "/rest/v1/%22Learners%22?school_id=eq." +
           encodeURIComponent(schoolId),
           {
             method: "GET",
