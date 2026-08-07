@@ -65,14 +65,63 @@
           return;
         }
 
-        const learner = learners[0];
+       const learner = learners[0];
 
-        result.innerHTML = `
-          <h2>${learner["Learner name"] || ""}</h2>
-          <p><strong>Assessment Number:</strong> ${learner.assessment_number || ""}</p>
-          <p><strong>Grade:</strong> ${learner.Grade || ""}</p>
-          <p><strong>Class:</strong> ${learner.Class || ""}</p>
-        `;
+const resultsUrl =
+  SUPABASE_URL +
+  "/rest/v1/Results?learner_id=eq." +
+  encodeURIComponent(learner.id) +
+  "&select=learning_area,points,Rubric_Code,term,year";
+
+const resultsResponse = await fetch(resultsUrl, {
+  method: "GET",
+  headers: {
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY
+  }
+});
+
+if (!resultsResponse.ok) {
+  throw new Error(await resultsResponse.text());
+}
+
+const learnerResults = await resultsResponse.json();
+
+let resultsHTML = "";
+
+if (learnerResults.length === 0) {
+  resultsHTML = "<p>No results found.</p>";
+} else {
+  resultsHTML = `
+    <h3>Results</h3>
+    <table border="1" cellpadding="8">
+      <tr>
+        <th>Learning Area</th>
+        <th>Points</th>
+        <th>Rubric Code</th>
+        <th>Term</th>
+        <th>Year</th>
+      </tr>
+      ${learnerResults.map(r => `
+        <tr>
+          <td>${r.learning_area || ""}</td>
+          <td>${r.points ?? ""}</td>
+          <td>${r.Rubric_Code || ""}</td>
+          <td>${r.term || ""}</td>
+          <td>${r.year || ""}</td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+result.innerHTML = `
+  <h2>${learner.learner_name || learner["Learner name"] || ""}</h2>
+  <p><strong>Assessment Number:</strong> ${learner.assessment_number || ""}</p>
+  <p><strong>Grade:</strong> ${learner.grade || ""}</p>
+  <p><strong>Class:</strong> ${learner.class || ""}</p>
+  ${resultsHTML}
+`;
 
       } catch (error) {
 
