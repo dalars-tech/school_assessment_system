@@ -115,15 +115,12 @@
 
         });
 
-      } catch (error) {
+      } 
 
-        console.error(error);
-
-        result.innerHTML =
-          "<p>Unable to connect to the database.</p>";
-      }
-
-    });
+    });catch (error) {
+    console.error("Database error:", error);
+    result.innerHTML = "<p>Database error: " + error.message + "</p>";
+}
   </script>
 
 </body>
