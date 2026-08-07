@@ -92,27 +92,28 @@ let resultsHTML = "";
 if (learnerResults.length === 0) {
   resultsHTML = "<p>No results found.</p>";
 } else {
-  resultsHTML = `
-    <h3>Results</h3>
-    <table border="1" cellpadding="8">
-      <tr>
-        <th>Learning Area</th>
-        <th>Points</th>
-        <th>Rubric Code</th>
-        <th>Term</th>
-        <th>Year</th>
-      </tr>
-      ${learnerResults.map(r => `
-        <tr>
-          <td>${r.learning_area || ""}</td>
-          <td>${r.points ?? ""}</td>
-          <td>${r.Rubric_Code || ""}</td>
-          <td>${r.term || ""}</td>
-          <td>${r.year || ""}</td>
-        </tr>
-      `).join("")}
-    </table>
-  `;
+ result.innerHTML = `
+  <h2>${learner.learner_name || ""}</h2>
+  <p><strong>Assessment Number:</strong> ${learner.assessment_number || ""}</p>
+  <p><strong>Grade:</strong> ${learner.grade || ""}</p>
+  <p><strong>Class:</strong> ${learner.class || ""}</p>
+
+  <h3>Results</h3>
+
+  <div>
+    ${
+      learnerResults && learnerResults.length
+        ? learnerResults.map(r => `
+          <p>
+            <strong>${r.learning_area || ""}</strong>:
+            ${r.points ?? ""} points
+            ${r.Rubric_Code ? " — " + r.Rubric_Code : ""}
+          </p>
+        `).join("")
+        : "<p>No results found.</p>"
+    }
+  </div>
+`;
 }
 
 result.innerHTML = `
