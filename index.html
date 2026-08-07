@@ -111,7 +111,7 @@
         /* Find results using John's learner ID */
         const resultsUrl =
           SUPABASE_URL +
-          "/rest/v1/Results?learner_id=eq." +
+          "/rest/v1/%22Results%22?learner_id=eq." +
           encodeURIComponent(learner.id) +
           "&select=learner_id,learning_area,points,Rubric_Code,term,year";
 
