@@ -285,13 +285,11 @@
 </script>
 
 </body>
-  <div id="resultsSummary" style="margin-top:25px; padding:20px; border:1px solid #ddd; border-radius:10px; background:#f8f9fa;">
-  <h2>Assessment Summary</h2>
+  <div id="resultsSummary">
+  <p><strong>Aggregate Points:</strong> <span id="aggregatePoints">-</span> / 72</p>
+  <p><strong>Rubrics:</strong> <span id="aggregateRubric">-</span></p>
 
-  <p><strong>Total Points:</strong> <span id="totalPoints">-</span></p>
-  <p><strong>Average Points:</strong> <span id="averagePoints">-</span></p>
-
-  <button onclick="window.print()" style="padding:10px 20px; cursor:pointer;">
+  <button onclick="window.print()">
     Print Results
   </button>
 </div>
@@ -321,9 +319,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   if (count > 0) {
-    document.getElementById("totalPoints").textContent = total;
-    document.getElementById("averagePoints").textContent =
-      (total / count).toFixed(1);
+   
   }
 });
 </script>
