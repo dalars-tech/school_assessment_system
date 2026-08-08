@@ -111,8 +111,8 @@
         /* Find results using John's learner ID */
         const resultsUrl =
           SUPABASE_URL +
-          "/rest/v1/student_results_api?learner_id=eq." +
-          encodeURIComponent(learner.id) +
+          "/rest/v1/student_results_api2?learner_id=eq." +
+          encodeURIComponent(assessmentNumber) +
           "&select=learner_id,learning_area,points,Rubric_Code,term,year";
 
         const resultsResponse = await fetch(resultsUrl, {
