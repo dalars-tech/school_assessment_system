@@ -285,4 +285,46 @@
 </script>
 
 </body>
+  <div id="resultsSummary" style="margin-top:25px; padding:20px; border:1px solid #ddd; border-radius:10px; background:#f8f9fa;">
+  <h2>Assessment Summary</h2>
+
+  <p><strong>Total Points:</strong> <span id="totalPoints">-</span></p>
+  <p><strong>Average Points:</strong> <span id="averagePoints">-</span></p>
+
+  <button onclick="window.print()" style="padding:10px 20px; cursor:pointer;">
+    Print Results
+  </button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const table = document.querySelector("table");
+
+  if (!table) return;
+
+  const rows = table.querySelectorAll("tbody tr");
+
+  let total = 0;
+  let count = 0;
+
+  rows.forEach(function (row) {
+    const cells = row.querySelectorAll("td");
+
+    if (cells.length >= 2) {
+      const points = parseFloat(cells[1].textContent.trim());
+
+      if (!isNaN(points)) {
+        total += points;
+        count++;
+      }
+    }
+  });
+
+  if (count > 0) {
+    document.getElementById("totalPoints").textContent = total;
+    document.getElementById("averagePoints").textContent =
+      (total / count).toFixed(1);
+  }
+});
+</script>
 </html>
