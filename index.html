@@ -113,8 +113,7 @@
           SUPABASE_URL +
           "/rest/v1/student_results_api2?learner_id=eq." +
           encodeURIComponent(assessmentNumber) +
-          "&select=learner_name,learning_area,points,Rubric_Code,term,year";
-
+         "&select=assessment_number,learner_name,grade,class,learner_id,learning_area,points,Rubric_Code,term,year"
         const resultsResponse = await fetch(resultsUrl, {
           method: "GET",
           headers: {
