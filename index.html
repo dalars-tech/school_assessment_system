@@ -3,196 +3,286 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Results</title>
+  <title>Student Assessment Results</title>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 40px auto;
+      background: #f4f6f8;
+      margin: 0;
       padding: 20px;
     }
 
-    input, button {
-      padding: 12px;
-      margin: 5px 0;
-      font-size: 16px;
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
     }
 
-    input {
-      width: 90%;
+    h1 {
+      text-align: center;
+    }
+
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      margin-top: 10px;
+      font-size: 16px;
     }
 
     button {
       cursor: pointer;
     }
 
+    #message {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .learner-info {
+      margin-top: 25px;
+      line-height: 1.8;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 20px;
     }
 
     th, td {
       border: 1px solid #ccc;
-      padding: 8px;
+      padding: 9px;
       text-align: left;
     }
 
     th {
-      font-weight: bold;
-    }
-
-    .error {
-      margin-top: 15px;
+      background: #eee;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>Student Results</h1>
+<div class="container">
+
+  <h1>Student Assessment Results</h1>
 
   <input
     type="text"
     id="assessmentNumber"
-    placeholder="Enter assessment number"
+    placeholder="Enter Assessment Number"
   >
 
-  <button onclick="searchResult()">Search</button>
+  <button onclick="searchLearner()">Search</button>
 
-  <div id="result"></div>
+  <div id="message"></div>
 
-  <script>
-    const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy";
+  <div id="results"></div>
 
-    async function searchResult() {
-      const result = document.getElementById("result");
-      const assessmentNumber =
-        document.getElementById("assessmentNumber").value.trim();
+</div>
 
-      result.innerHTML = "<p>Searching...</p>";
+<script>
 
-      try {
-        if (!assessmentNumber) {
-          result.innerHTML = "<p>Please enter an assessment number.</p>";
-          return;
-        }
+  // YOUR SUPABASE DETAILS
+  const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy";
 
-        /* Find learner */
-        const learnerUrl =
-          SUPABASE_URL +
-          "/rest/v1/student_results_api3?assessment_number=eq." +
-          encodeURIComponent(assessmentNumber) +
-          "&select=id,school_id,assessment_number,learner_name,grade,class";
 
-        const learnerResponse = await fetch(learnerUrl, {
-          method: "GET",
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization": "Bearer " + SUPABASE_KEY
-          }
-        });
+  async function searchLearner() {
 
-        if (!learnerResponse.ok) {
-          throw new Error(await learnerResponse.text());
-        }
+    const assessmentNumber =
+      document.getElementById("assessmentNumber").value.trim();
 
-        const learners = await learnerResponse.json();
+    const message =
+      document.getElementById("message");
 
-        if (!learners.length) {
-          result.innerHTML = "<p>Learner not found.</p>";
-          return;
-        }
+    const resultsDiv =
+      document.getElementById("results");
 
-        const learner = learners[0];
 
-        /* Find results using John's learner ID */
-        const resultsUrl =
-          SUPABASE_URL +
-          "/rest/v1/student_results_api3?learner_id=eq." +
-          encodeURIComponent(assessmentNumber) +
-         "&select=assessment_number,learner_name,grade,class,learner_id,learning_area,points,Rubric_Code,term,year"
-        const resultsResponse = await fetch(resultsUrl, {
-          method: "GET",
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization": "Bearer " + SUPABASE_KEY
-          }
-        });
+    resultsDiv.innerHTML = "";
 
-        if (!resultsResponse.ok) {
-          throw new Error(await resultsResponse.text());
-        }
-
-        const learnerResults = await resultsResponse.json();
-
-        let resultsHTML = "";
-
-        if (learnerResults.length === 0) {
-          resultsHTML = "<p>No results found.</p>";
-        } else {
-          resultsHTML = `
-            <h3>Results</h3>
-
-            <table>
-              <tr>
-                <th>Learning Area</th>
-                <th>Points</th>
-                <th>Rubric Code</th>
-                <th>Term</th>
-                <th>Year</th>
-              </tr>
-
-              ${learnerResults.map(r => `
-                <tr>
-                  <td>${r.learning_area || ""}</td>
-                  <td>${r.points ?? ""}</td>
-                  <td>${r.Rubric_Code || ""}</td>
-                  <td>${r.term || ""}</td>
-                  <td>${r.year || ""}</td>
-                </tr>
-              `).join("")}
-            </table>
-          `;
-        }
-
-        result.innerHTML = `
-          <h2>${learner.learner_name || ""}</h2>
-
-          <p>
-            <strong>Assessment number:</strong>
-            ${learner.assessment_number || ""}
-          </p>
-
-          <p>
-            <strong>Grade:</strong>
-            ${learner.grade || ""}
-          </p>
-
-          <p>
-            <strong>Class:</strong>
-            ${learner.class || ""}
-          </p>
-
-          ${resultsHTML}
-        `;
-
-      } catch (error) {
-        console.error(error);
-
-        result.innerHTML = `
-          <p class="error">
-            Unable to connect to database.
-          </p>
-          <p class="error">
-            ${error.message || ""}
-          </p>
-        `;
-      }
+    if (!assessmentNumber) {
+      message.innerHTML = "Please enter an assessment number.";
+      return;
     }
-  </script>
+
+
+    message.innerHTML = "Searching...";
+
+
+    try {
+
+      // FIND LEARNER
+      const learnerUrl =
+        SUPABASE_URL +
+        "/rest/v1/school_app_learners?assessment_number=eq." +
+        encodeURIComponent(assessmentNumber) +
+        "&select=id,school_id,assessment_number,learner_name,grade,class";
+
+
+      const learnerResponse =
+        await fetch(learnerUrl, {
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + SUPABASE_KEY
+          }
+        });
+
+
+      if (!learnerResponse.ok) {
+        throw new Error(await learnerResponse.text());
+      }
+
+
+      const learners =
+        await learnerResponse.json();
+
+
+      if (learners.length === 0) {
+
+        message.innerHTML =
+          "Learner not found.";
+
+        return;
+      }
+
+
+      const learner = learners[0];
+
+
+      // FIND RESULTS
+      const resultsUrl =
+        SUPABASE_URL +
+        "/rest/v1/school_app_results?learner_id=eq." +
+        encodeURIComponent(learner.id) +
+        "&select=learning_area,points,rubric_code,term,year&order=id";
+
+
+      const resultsResponse =
+        await fetch(resultsUrl, {
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + SUPABASE_KEY
+          }
+        });
+
+
+      if (!resultsResponse.ok) {
+        throw new Error(await resultsResponse.text());
+      }
+
+
+      const learnerResults =
+        await resultsResponse.json();
+
+
+      message.innerHTML = "";
+
+
+      // LEARNER INFORMATION
+      let html = `
+
+        <div class="learner-info">
+
+          <h2>${learner.learner_name}</h2>
+
+          <strong>School ID:</strong>
+          ${learner.school_id}<br>
+
+          <strong>Learner ID:</strong>
+          ${learner.id}<br>
+
+          <strong>Assessment Number:</strong>
+          ${learner.assessment_number}<br>
+
+          <strong>Grade:</strong>
+          ${learner.grade}<br>
+
+          <strong>Class:</strong>
+          ${learner.class}
+
+        </div>
+
+      `;
+
+
+      // RESULTS TABLE
+      if (learnerResults.length === 0) {
+
+        html += "<p>No results found.</p>";
+
+      } else {
+
+        html += `
+
+          <h2>Assessment Results</h2>
+
+          <table>
+
+            <tr>
+              <th>Learning Area</th>
+              <th>Points</th>
+              <th>Rubric Code</th>
+              <th>Term</th>
+              <th>Year</th>
+            </tr>
+
+        `;
+
+
+        learnerResults.forEach(result => {
+
+          html += `
+
+            <tr>
+
+              <td>${result.learning_area}</td>
+
+              <td>${result.points}</td>
+
+              <td>${result.rubric_code || ""}</td>
+
+              <td>${result.term}</td>
+
+              <td>${result.year}</td>
+
+            </tr>
+
+          `;
+
+        });
+
+
+        html += `
+          </table>
+        `;
+
+      }
+
+
+      resultsDiv.innerHTML = html;
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      message.innerHTML =
+        "Unable to connect to database.";
+
+      resultsDiv.innerHTML =
+        "<p>" + error.message + "</p>";
+
+    }
+
+  }
+
+</script>
 
 </body>
 </html>
