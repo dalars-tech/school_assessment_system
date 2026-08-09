@@ -285,18 +285,67 @@
 </script>
 
 </body>
-  <div id="resultsSummary">
-  <p><strong>Aggregate Points:</strong> <span id="aggregatePoints">-</span> / 72</p>
-  <p><strong>Rubrics:</strong> <span id="aggregateRubric">-</span></p>
+ <script>
+function calculateAggregate() {
+  const table = document.querySelector("#results table");
 
-  <button onclick="window.print()">
-    Print Results
-  </button>
-</div>
+  if (!table) return;
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const table = document.querySelector("table");
+  const rows = table.querySelectorAll("tbody tr");
+
+  let aggregate = 0;
+  let count = 0;
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+
+    if (cells.length >= 2) {
+      const points = parseInt(cells[1].textContent.trim(), 10);
+
+      if (!isNaN(points)) {
+        aggregate += points;
+        count++;
+      }
+    }
+  });
+
+  if (count === 0) return;
+
+  let rubric = "";
+
+  if (aggregate <= 9) {
+    rubric = "BE2";
+  } else if (aggregate <= 18) {
+    rubric = "BE1";
+  } else if (aggregate <= 27) {
+    rubric = "AE2";
+  } else if (aggregate <= 36) {
+    rubric = "AE1";
+  } else if (aggregate <= 45) {
+    rubric = "ME2";
+  } else if (aggregate <= 54) {
+    rubric = "ME1";
+  } else if (aggregate <= 63) {
+    rubric = "EE2";
+  } else {
+    rubric = "EE1";
+  }
+
+  document.getElementById("aggregatePoints").textContent = aggregate;
+  document.getElementById("aggregateRubric").textContent = rubric;
+}
+
+const observer = new MutationObserver(function () {
+  calculateAggregate();
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
+window.addEventListener("load", calculateAggregate);
+</script>
 
   if (!table) return;
 
