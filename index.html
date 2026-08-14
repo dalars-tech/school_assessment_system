@@ -300,7 +300,7 @@
     </button>
 
     <p id="uploadStatus"></p>
-</div>
+<div id="uploadPreview" style="margin-top:20px; overflow-x:auto;"></div>
 
 <script>
 async function uploadResultsFile() {
@@ -308,13 +308,75 @@ async function uploadResultsFile() {
     const status = document.getElementById("uploadStatus");
 
     if (!fileInput.files.length) {
-        status.textContent = "Please select a PDF or Word file first.";
+        status.textContent = "Please select a Word file first.";
         return;
     }
 
     const file = fileInput.files[0];
 
-    status.textContent = "File selected: " + file.name;
+    if (!file.name.toLowerCase().endsWith(".docx")) {
+        status.textContent = "For this test, please select a .docx Word file.";
+        return;
+    }
+
+    status.textContent = "Reading " + file.name + "...";
+
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+
+        const result = await mammoth.convertToHtml({
+            arrayBuffer: arrayBuffer
+        });
+
+        const parser = new DOMParser();
+        const htmlDoc = parser.parseFromString(result.value, "text/html");
+
+        const tables = htmlDoc.querySelectorAll("table");
+
+        if (tables.length === 0) {
+            status.textContent = "No results table was found in the Word document.";
+            return;
+        }
+
+        const wordTable = tables[0];
+        const rows = wordTable.querySelectorAll("tr");
+
+        let output = `
+            <h3>Imported Results</h3>
+            <table border="1" style="width:100%; border-collapse:collapse;">
+        `;
+
+        rows.forEach((row, rowIndex) => {
+            const cells = row.querySelectorAll("th, td");
+
+            output += "<tr>";
+
+            cells.forEach(cell => {
+                const tag = rowIndex === 0 ? "th" : "td";
+
+                output += `
+                    <${tag} style="padding:8px;">
+                        ${cell.textContent.trim()}
+                    </${tag}>
+                `;
+            });
+
+            output += "</tr>";
+        });
+
+        output += "</table>";
+
+        document.getElementById("uploadPreview").innerHTML = output;
+
+        status.textContent =
+            "Successfully read " + file.name + ".";
+            
+    } catch (error) {
+        console.error(error);
+
+        status.textContent =
+            "Error reading the Word file: " + error.message;
+    }
 }
 </script>
 <script>
@@ -377,6 +439,6 @@ function calculateAggregate() {
 
 window.addEventListener("load", calculateAggregate);
 </script>
-
+<script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
 </body>
 </html>
