@@ -317,92 +317,66 @@ async function uploadResultsFile() {
     status.textContent = "File selected: " + file.name;
 }
 </script>
-</body>
- <script>
+<script>
 function calculateAggregate() {
-  const table = document.querySelector("#results table");
+    const table = document.querySelector("#results table");
 
-  if (!table) return;
+    if (!table) return;
 
-  const rows = table.querySelectorAll("tbody tr");
+    const rows = table.querySelectorAll("tbody tr");
 
-  let aggregate = 0;
-  let count = 0;
+    let aggregate = 0;
+    let count = 0;
 
-  rows.forEach(row => {
-    const cells = row.querySelectorAll("td");
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
 
-    if (cells.length >= 2) {
-      const points = parseInt(cells[1].textContent.trim(), 10);
+        if (cells.length >= 2) {
+            const points = parseInt(cells[1].textContent.trim(), 10);
 
-      if (!isNaN(points)) {
-        aggregate += points;
-        count++;
-      }
+            if (!isNaN(points)) {
+                aggregate += points;
+                count++;
+            }
+        }
+    });
+
+    if (count === 0) return;
+
+    let rubric = "";
+
+    if (aggregate <= 9) {
+        rubric = "BE2";
+    } else if (aggregate <= 18) {
+        rubric = "BE1";
+    } else if (aggregate <= 27) {
+        rubric = "AE2";
+    } else if (aggregate <= 36) {
+        rubric = "AE1";
+    } else if (aggregate <= 45) {
+        rubric = "ME2";
+    } else if (aggregate <= 54) {
+        rubric = "ME1";
+    } else if (aggregate <= 63) {
+        rubric = "EE2";
+    } else {
+        rubric = "EE1";
     }
-  });
 
-  if (count === 0) return;
+    const aggregatePoints = document.getElementById("aggregatePoints");
+    const aggregateRubric = document.getElementById("aggregateRubric");
 
-  let rubric = "";
+    if (aggregatePoints) {
+        aggregatePoints.textContent = aggregate;
+    }
 
-  if (aggregate <= 9) {
-    rubric = "BE2";
-  } else if (aggregate <= 18) {
-    rubric = "BE1";
-  } else if (aggregate <= 27) {
-    rubric = "AE2";
-  } else if (aggregate <= 36) {
-    rubric = "AE1";
-  } else if (aggregate <= 45) {
-    rubric = "ME2";
-  } else if (aggregate <= 54) {
-    rubric = "ME1";
-  } else if (aggregate <= 63) {
-    rubric = "EE2";
-  } else {
-    rubric = "EE1";
-  }
-
-  document.getElementById("aggregatePoints").textContent = aggregate;
-  document.getElementById("aggregateRubric").textContent = rubric;
+    if (aggregateRubric) {
+        aggregateRubric.textContent = rubric;
+    }
 }
-
-const observer = new MutationObserver(function () {
-  calculateAggregate();
-});
-
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
 
 window.addEventListener("load", calculateAggregate);
 </script>
 
-  if (!table) return;
-
-  const rows = table.querySelectorAll("tbody tr");
-
-  let total = 0;
-  let count = 0;
-
-  rows.forEach(function (row) {
-    const cells = row.querySelectorAll("td");
-
-    if (cells.length >= 2) {
-      const points = parseFloat(cells[1].textContent.trim());
-
-      if (!isNaN(points)) {
-        total += points;
-        count++;
-      }
-    }
-  });
-
-  if (count > 0) {
-   
-  }
-});
-</script>
+</body>
 </html>
