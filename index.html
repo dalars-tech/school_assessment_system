@@ -283,7 +283,40 @@
   }
 
 </script>
+<!-- ADMIN UPLOAD RESULTS -->
+<div class="container" style="margin-top:20px;">
+    <h2>Admin - Upload Results</h2>
 
+    <label for="resultsFile">Select PDF or Word Results File:</label>
+    <input
+        type="file"
+        id="resultsFile"
+        accept=".pdf,.doc,.docx"
+        style="display:block; margin:15px 0;"
+    >
+
+    <button onclick="uploadResultsFile()">
+        Upload Results
+    </button>
+
+    <p id="uploadStatus"></p>
+</div>
+
+<script>
+async function uploadResultsFile() {
+    const fileInput = document.getElementById("resultsFile");
+    const status = document.getElementById("uploadStatus");
+
+    if (!fileInput.files.length) {
+        status.textContent = "Please select a PDF or Word file first.";
+        return;
+    }
+
+    const file = fileInput.files[0];
+
+    status.textContent = "File selected: " + file.name;
+}
+</script>
 </body>
  <script>
 function calculateAggregate() {
