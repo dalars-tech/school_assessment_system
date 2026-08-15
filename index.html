@@ -283,99 +283,357 @@
   }
 
 </script>
-<!-- ADMIN UPLOAD RESULTS -->
 <div class="container" style="margin-top:20px;">
     <h2>Admin - Upload Results</h2>
 
-    <label for="resultsFile">Select PDF or Word Results File:</label>
+    <label for="schoolId">School ID:</label>
+    <input
+        type="text"
+        id="schoolId"
+        placeholder="e.g. SCHOO1"
+        value="SCHOO1"
+        style="display:block; margin:8px 0 15px; padding:8px;"
+    >
+
+    <label for="resultsTerm">Term:</label>
+    <select id="resultsTerm" style="display:block; margin:8px 0 15px; padding:8px;">
+        <option value="Term 1">Term 1</option>
+        <option value="Term 2" selected>Term 2</option>
+        <option value="Term 3">Term 3</option>
+    </select>
+
+    <label for="resultsYear">Year:</label>
+    <input
+        type="number"
+        id="resultsYear"
+        value="2026"
+        style="display:block; margin:8px 0 15px; padding:8px;"
+    >
+
+    <label for="resultsFile">Results File:</label>
     <input
         type="file"
         id="resultsFile"
-        accept=".pdf,.doc,.docx"
+        accept=".docx"
         style="display:block; margin:15px 0;"
     >
 
     <button onclick="uploadResultsFile()">
-        Upload Results
+        Upload & Import Results
     </button>
 
     <p id="uploadStatus"></p>
-<div id="uploadPreview" style="margin-top:20px; overflow-x:auto;"></div>
 
+    <div id="uploadPreview"
+         style="margin-top:20px; overflow-x:auto;">
+    </div>
+</div>
 <script>
 async function uploadResultsFile() {
+
     const fileInput = document.getElementById("resultsFile");
     const status = document.getElementById("uploadStatus");
 
+    const schoolId =
+        document.getElementById("schoolId").value.trim();
+
+    const term =
+        document.getElementById("resultsTerm").value;
+
+    const year =
+        parseInt(document.getElementById("resultsYear").value, 10);
+
+    if (!schoolId) {
+        status.textContent = "Please enter a School ID.";
+        return;
+    }
+
     if (!fileInput.files.length) {
-        status.textContent = "Please select a Word file first.";
+        status.textContent = "Please select a Word file.";
+        return;
+    }
+
+    if (!year) {
+        status.textContent = "Please enter the year.";
         return;
     }
 
     const file = fileInput.files[0];
 
     if (!file.name.toLowerCase().endsWith(".docx")) {
-        status.textContent = "For this test, please select a .docx Word file.";
+        status.textContent =
+            "Please select a .docx Word file.";
         return;
     }
 
-    status.textContent = "Reading " + file.name + "...";
+    status.textContent =
+        "Reading and importing " + file.name + "...";
 
     try {
-        const arrayBuffer = await file.arrayBuffer();
 
-        const result = await mammoth.convertToHtml({
-            arrayBuffer: arrayBuffer
-        });
+        /* READ WORD DOCUMENT */
 
-        const parser = new DOMParser();
-        const htmlDoc = parser.parseFromString(result.value, "text/html");
+        const arrayBuffer =
+            await file.arrayBuffer();
 
-        const tables = htmlDoc.querySelectorAll("table");
+        const result =
+            await mammoth.convertToHtml({
+                arrayBuffer: arrayBuffer
+            });
+
+        const parser =
+            new DOMParser();
+
+        const htmlDoc =
+            parser.parseFromString(
+                result.value,
+                "text/html"
+            );
+
+        const tables =
+            htmlDoc.querySelectorAll("table");
 
         if (tables.length === 0) {
-            status.textContent = "No results table was found in the Word document.";
+            status.textContent =
+                "No results table was found.";
             return;
         }
 
         const wordTable = tables[0];
-        const rows = wordTable.querySelectorAll("tr");
 
-        let output = `
-            <h3>Imported Results</h3>
-            <table border="1" style="width:100%; border-collapse:collapse;">
-        `;
+        const rows =
+            Array.from(
+                wordTable.querySelectorAll("tr")
+            );
 
-        rows.forEach((row, rowIndex) => {
-            const cells = row.querySelectorAll("th, td");
+        if (rows.length < 2) {
+            status.textContent =
+                "The results table contains no learners.";
+            return;
+        }
 
-            output += "<tr>";
+        /* COLUMN NAMES */
 
-            cells.forEach(cell => {
-                const tag = rowIndex === 0 ? "th" : "td";
+        const headers =
+            Array.from(
+                rows[0].querySelectorAll("th,td")
+            ).map(cell =>
+                cell.textContent.trim()
+            );
 
-                output += `
-                    <${tag} style="padding:8px;">
-                        ${cell.textContent.trim()}
-                    </${tag}>
-                `;
-            });
+        const learningAreas = [
+            "Mathematics",
+            "English",
+            "Kiswahili",
+            "Integrated Science",
+            "Social Studies",
+            "CRE/IRE",
+            "Agriculture",
+            "Creative Arts & Sports",
+            "Pre-Technical Studies"
+        ];
 
-            output += "</tr>";
-        });
+        /* IMPORT LEARNERS */
 
-        output += "</table>";
+        let learnersImported = 0;
+        let resultsImported = 0;
 
-        document.getElementById("uploadPreview").innerHTML = output;
+        for (let i = 1; i < rows.length; i++) {
+
+            const cells =
+                Array.from(
+                    rows[i].querySelectorAll("td")
+                ).map(cell =>
+                    cell.textContent.trim()
+                );
+
+            if (cells.length < 11) {
+                continue;
+            }
+
+            const assessmentNumber = cells[0];
+            const learnerName = cells[1];
+
+            if (!assessmentNumber || !learnerName) {
+                continue;
+            }
+
+            /*
+             * Find existing learner first.
+             */
+
+            const findLearnerUrl =
+                SUPABASE_URL +
+                "/rest/v1/school_app_learners" +
+                "?school_id=eq." +
+                encodeURIComponent(schoolId) +
+                "&assessment_number=eq." +
+                encodeURIComponent(assessmentNumber) +
+                "&select=id";
+
+            const findResponse =
+                await fetch(findLearnerUrl, {
+                    headers: {
+                        "apikey": SUPABASE_KEY,
+                        "Authorization":
+                            "Bearer " + SUPABASE_KEY
+                    }
+                });
+
+            if (!findResponse.ok) {
+                throw new Error(
+                    await findResponse.text()
+                );
+            }
+
+            const existing =
+                await findResponse.json();
+
+            let learnerId;
+
+            /* CREATE LEARNER */
+
+            if (existing.length === 0) {
+
+                const learnerData = {
+                    school_id: schoolId,
+                    assessment_number:
+                        assessmentNumber,
+                    learner_name:
+                        learnerName,
+                    grade: "7",
+                    class: "7Y"
+                };
+
+                const insertLearnerResponse =
+                    await fetch(
+                        SUPABASE_URL +
+                        "/rest/v1/school_app_learners",
+                        {
+                            method: "POST",
+                            headers: {
+                                "apikey": SUPABASE_KEY,
+                                "Authorization":
+                                    "Bearer " + SUPABASE_KEY,
+                                "Content-Type":
+                                    "application/json",
+                                "Prefer":
+                                    "return=representation"
+                            },
+                            body:
+                                JSON.stringify(
+                                    learnerData
+                                )
+                        }
+                    );
+
+                if (!insertLearnerResponse.ok) {
+                    throw new Error(
+                        await insertLearnerResponse.text()
+                    );
+                }
+
+                const newLearners =
+                    await insertLearnerResponse.json();
+
+                learnerId =
+                    newLearners[0].id;
+
+                learnersImported++;
+
+            } else {
+
+                learnerId =
+                    existing[0].id;
+            }
+
+            /* IMPORT 9 LEARNING AREAS */
+
+            for (let j = 0;
+                 j < learningAreas.length;
+                 j++) {
+
+                const points =
+                    parseInt(cells[j + 2], 10);
+
+                if (isNaN(points)) {
+                    continue;
+                }
+
+                let rubricCode = "";
+
+                if (points === 1) {
+                    rubricCode = "BE2";
+                } else if (points === 2) {
+                    rubricCode = "BE1";
+                } else if (points === 3) {
+                    rubricCode = "AE2";
+                } else if (points === 4) {
+                    rubricCode = "AE1";
+                } else if (points === 5) {
+                    rubricCode = "ME2";
+                } else if (points === 6) {
+                    rubricCode = "ME1";
+                } else if (points === 7) {
+                    rubricCode = "EE2";
+                } else if (points >= 8) {
+                    rubricCode = "EE1";
+                }
+
+                const resultData = {
+                    learner_id: learnerId,
+                    learning_area:
+                        learningAreas[j],
+                    points: points,
+                    rubric_code: rubricCode,
+                    term: term,
+                    year: year
+                };
+
+                const insertResultResponse =
+                    await fetch(
+                        SUPABASE_URL +
+                        "/rest/v1/school_app_results",
+                        {
+                            method: "POST",
+                            headers: {
+                                "apikey": SUPABASE_KEY,
+                                "Authorization":
+                                    "Bearer " + SUPABASE_KEY,
+                                "Content-Type":
+                                    "application/json"
+                            },
+                            body:
+                                JSON.stringify(
+                                    resultData
+                                )
+                        }
+                    );
+
+                if (!insertResultResponse.ok) {
+                    throw new Error(
+                        await insertResultResponse.text()
+                    );
+                }
+
+                resultsImported++;
+            }
+        }
 
         status.textContent =
-            "Successfully read " + file.name + ".";
-            
+            "SUCCESS! " +
+            learnersImported +
+            " learners imported and " +
+            resultsImported +
+            " learning-area results saved.";
+
     } catch (error) {
+
         console.error(error);
 
         status.textContent =
-            "Error reading the Word file: " + error.message;
+            "IMPORT ERROR: " +
+            error.message;
     }
 }
 </script>
