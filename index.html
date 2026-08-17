@@ -3,700 +3,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Assessment Results</title>
+  <title>DRMS - Digital Results Management System</title>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #f4f7fb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
     }
 
     .container {
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    input, button {
       width: 100%;
-      box-sizing: border-box;
+      max-width: 430px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .logo h1 {
+      font-size: 30px;
+      color: #163b65;
+      margin-bottom: 8px;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      color: #222;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
       padding: 13px;
-      margin-top: 10px;
-      font-size: 16px;
+      border: 1px solid #d5dbe3;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      font-size: 15px;
     }
 
     button {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 8px;
+      background: #163b65;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    #message {
-      margin-top: 20px;
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .parent-link {
       text-align: center;
-    }
-
-    .learner-info {
-      margin-top: 25px;
-      line-height: 1.8;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
       margin-top: 20px;
     }
 
-    th, td {
-      border: 1px solid #ccc;
-      padding: 9px;
-      text-align: left;
+    .parent-link a {
+      color: #163b65;
+      text-decoration: none;
+      font-size: 14px;
     }
 
-    th {
-      background: #eee;
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #888;
+      font-size: 12px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="container">
-
-  <h1>Student Assessment Results</h1>
-
-  <input
-    type="text"
-    id="assessmentNumber"
-    placeholder="Enter Assessment Number"
-  >
-
-  <button onclick="searchLearner()">Search</button>
-
-  <div id="message"></div>
-
-  <div id="results"></div>
-
-</div>
-
-<script>
-
-  // YOUR SUPABASE DETAILS
-  const SUPABASE_URL = "https://dduxprtjexkcuauahuwn.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_HilgEkh5cx8xC4eM_LvjJQ_qIlXM0Wy";
-
-
-  async function searchLearner() {
-
-    const assessmentNumber =
-      document.getElementById("assessmentNumber").value.trim();
-
-    const message =
-      document.getElementById("message");
-
-    const resultsDiv =
-      document.getElementById("results");
-
-
-    resultsDiv.innerHTML = "";
-
-    if (!assessmentNumber) {
-      message.innerHTML = "Please enter an assessment number.";
-      return;
-    }
-
-
-    message.innerHTML = "Searching...";
-
-
-    try {
-
-      // FIND LEARNER
-      const learnerUrl =
-        SUPABASE_URL +
-        "/rest/v1/school_app_learners?assessment_number=eq." +
-        encodeURIComponent(assessmentNumber) +
-        "&select=id,school_id,assessment_number,learner_name,grade,class";
-
-
-      const learnerResponse =
-        await fetch(learnerUrl, {
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization": "Bearer " + SUPABASE_KEY
-          }
-        });
-
-
-      if (!learnerResponse.ok) {
-        throw new Error(await learnerResponse.text());
-      }
-
-
-      const learners =
-        await learnerResponse.json();
-
-
-      if (learners.length === 0) {
-
-        message.innerHTML =
-          "Learner not found.";
-
-        return;
-      }
-
-
-      const learner = learners[0];
-
-
-      // FIND RESULTS
-      const resultsUrl =
-        SUPABASE_URL +
-        "/rest/v1/school_app_results?learner_id=eq." +
-        encodeURIComponent(learner.id) +
-        "&select=learning_area,points,rubric_code,term,year&order=id";
-
-
-      const resultsResponse =
-        await fetch(resultsUrl, {
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization": "Bearer " + SUPABASE_KEY
-          }
-        });
-
-
-      if (!resultsResponse.ok) {
-        throw new Error(await resultsResponse.text());
-      }
-
-
-      const learnerResults =
-        await resultsResponse.json();
-
-
-      message.innerHTML = "";
-
-
-      // LEARNER INFORMATION
-      let html = `
-
-        <div class="learner-info">
-
-          <h2>${learner.learner_name}</h2>
-
-          <strong>School ID:</strong>
-          ${learner.school_id}<br>
-
-          <strong>Learner ID:</strong>
-          ${learner.id}<br>
-
-          <strong>Assessment Number:</strong>
-          ${learner.assessment_number}<br>
-
-          <strong>Grade:</strong>
-          ${learner.grade}<br>
-
-          <strong>Class:</strong>
-          ${learner.class}
-
-        </div>
-
-      `;
-
-
-      // RESULTS TABLE
-      if (learnerResults.length === 0) {
-
-        html += "<p>No results found.</p>";
-
-      } else {
-
-        html += `
-
-          <h2>Assessment Results</h2>
-
-          <table>
-
-            <tr>
-              <th>Learning Area</th>
-              <th>Points</th>
-              <th>Rubric Code</th>
-              <th>Term</th>
-              <th>Year</th>
-            </tr>
-
-        `;
-
-
-        learnerResults.forEach(result => {
-
-          html += `
-
-            <tr>
-
-              <td>${result.learning_area}</td>
-
-              <td>${result.points}</td>
-
-              <td>${result.rubric_code || ""}</td>
-
-              <td>${result.term}</td>
-
-              <td>${result.year}</td>
-
-            </tr>
-
-          `;
-
-        });
-
-
-        html += `
-          </table>
-        `;
-
-      }
-
-
-      resultsDiv.innerHTML = html;
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      message.innerHTML =
-        "Unable to connect to database.";
-
-      resultsDiv.innerHTML =
-        "<p>" + error.message + "</p>";
-
-    }
-
-  }
-
-</script>
-<div class="container" style="margin-top:20px;">
-    <h2>Admin - Upload Results</h2>
-
-    <label for="schoolId">School ID:</label>
-    <input
-        type="text"
-        id="schoolId"
-        placeholder="e.g. SCHOO1"
-        value="SCHOO1"
-        style="display:block; margin:8px 0 15px; padding:8px;"
-    >
-
-    <label for="resultsTerm">Term:</label>
-    <select id="resultsTerm" style="display:block; margin:8px 0 15px; padding:8px;">
-        <option value="Term 1">Term 1</option>
-        <option value="Term 2" selected>Term 2</option>
-        <option value="Term 3">Term 3</option>
-    </select>
-
-    <label for="resultsYear">Year:</label>
-    <input
-        type="number"
-        id="resultsYear"
-        value="2026"
-        style="display:block; margin:8px 0 15px; padding:8px;"
-    >
-
-    <label for="resultsFile">Results File:</label>
-    <input
-        type="file"
-        id="resultsFile"
-        accept=".docx"
-        style="display:block; margin:15px 0;"
-    >
-
-    <button onclick="uploadResultsFile()">
-        Upload & Import Results
-    </button>
-
-    <p id="uploadStatus"></p>
-
-    <div id="uploadPreview"
-         style="margin-top:20px; overflow-x:auto;">
+  <div class="container">
+
+    <div class="logo">
+      <h1>DRMS</h1>
+      <p>Digital Results Management System</p>
     </div>
-</div>
-<script>
-async function uploadResultsFile() {
 
-    const fileInput = document.getElementById("resultsFile");
-    const status = document.getElementById("uploadStatus");
+    <div class="card">
 
-    const schoolId =
-        document.getElementById("schoolId").value.trim();
+      <h2>Administrator Login</h2>
 
-    const term =
-        document.getElementById("resultsTerm").value;
+      <p class="subtitle">
+        Authorized DRMS administrators and school uploaders
+      </p>
 
-    const year =
-        parseInt(document.getElementById("resultsYear").value, 10);
+      <form id="loginForm">
 
-    if (!schoolId) {
-        status.textContent = "Please enter a School ID.";
-        return;
-    }
+        <label for="email">Email Address</label>
 
-    if (!fileInput.files.length) {
-        status.textContent = "Please select a Word file.";
-        return;
-    }
+        <input
+          type="email"
+          id="email"
+          placeholder="Enter your email"
+          required
+        >
 
-    if (!year) {
-        status.textContent = "Please enter the year.";
-        return;
-    }
+        <label for="password">Password</label>
 
-    const file = fileInput.files[0];
+        <input
+          type="password"
+          id="password"
+          placeholder="Enter your password"
+          required
+        >
 
-    if (!file.name.toLowerCase().endsWith(".docx")) {
-        status.textContent =
-            "Please select a .docx Word file.";
-        return;
-    }
+        <button type="submit">
+          Sign In
+        </button>
 
-    status.textContent =
-        "Reading and importing " + file.name + "...";
+      </form>
 
-    try {
+      <div class="parent-link">
+        <a href="#" id="parentPortal">
+          Parent Results Portal
+        </a>
+      </div>
 
-        /* READ WORD DOCUMENT */
+    </div>
 
-        const arrayBuffer =
-            await file.arrayBuffer();
+    <div class="footer">
+      © 2026 Digital Results Management System
+    </div>
 
-        const result =
-            await mammoth.convertToHtml({
-                arrayBuffer: arrayBuffer
-            });
+  </div>
 
-        const parser =
-            new DOMParser();
-
-        const htmlDoc =
-            parser.parseFromString(
-                result.value,
-                "text/html"
-            );
-
-        const tables =
-            htmlDoc.querySelectorAll("table");
-
-        if (tables.length === 0) {
-            status.textContent =
-                "No results table was found.";
-            return;
-        }
-
-        const wordTable = tables[0];
-
-        const rows =
-            Array.from(
-                wordTable.querySelectorAll("tr")
-            );
-
-        if (rows.length < 2) {
-            status.textContent =
-                "The results table contains no learners.";
-            return;
-        }
-
-        /* COLUMN NAMES */
-
-        const headers =
-            Array.from(
-                rows[0].querySelectorAll("th,td")
-            ).map(cell =>
-                cell.textContent.trim()
-            );
-
-        const learningAreas = [
-            "Mathematics",
-            "English",
-            "Kiswahili",
-            "Integrated Science",
-            "Social Studies",
-            "CRE/IRE",
-            "Agriculture",
-            "Creative Arts & Sports",
-            "Pre-Technical Studies"
-        ];
-
-        /* IMPORT LEARNERS */
-
-        let learnersImported = 0;
-        let resultsImported = 0;
-
-        for (let i = 1; i < rows.length; i++) {
-
-            const cells =
-                Array.from(
-                    rows[i].querySelectorAll("td")
-                ).map(cell =>
-                    cell.textContent.trim()
-                );
-
-            if (cells.length < 11) {
-                continue;
-            }
-
-            const assessmentNumber = cells[0];
-            const learnerName = cells[1];
-
-            if (!assessmentNumber || !learnerName) {
-                continue;
-            }
-
-            /*
-             * Find existing learner first.
-             */
-
-            const findLearnerUrl =
-                SUPABASE_URL +
-                "/rest/v1/school_app_learners" +
-                "?school_id=eq." +
-                encodeURIComponent(schoolId) +
-                "&assessment_number=eq." +
-                encodeURIComponent(assessmentNumber) +
-                "&select=id";
-
-            const findResponse =
-                await fetch(findLearnerUrl, {
-                    headers: {
-                        "apikey": SUPABASE_KEY,
-                        "Authorization":
-                            "Bearer " + SUPABASE_KEY
-                    }
-                });
-
-            if (!findResponse.ok) {
-                throw new Error(
-                    await findResponse.text()
-                );
-            }
-
-            const existing =
-                await findResponse.json();
-
-            let learnerId;
-
-            /* CREATE LEARNER */
-
-            if (existing.length === 0) {
-
-                const learnerData = {
-                    school_id: schoolId,
-                    assessment_number:
-                        assessmentNumber,
-                    learner_name:
-                        learnerName,
-                    grade: "7",
-                    class: "7Y"
-                };
-
-                const insertLearnerResponse =
-                    await fetch(
-                        SUPABASE_URL +
-                        "/rest/v1/school_app_learners",
-                        {
-                            method: "POST",
-                            headers: {
-                                "apikey": SUPABASE_KEY,
-                                "Authorization":
-                                    "Bearer " + SUPABASE_KEY,
-                                "Content-Type":
-                                    "application/json",
-                                "Prefer":
-                                    "return=representation"
-                            },
-                            body:
-                                JSON.stringify(
-                                    learnerData
-                                )
-                        }
-                    );
-
-                if (!insertLearnerResponse.ok) {
-                    throw new Error(
-                        await insertLearnerResponse.text()
-                    );
-                }
-
-                const newLearners =
-                    await insertLearnerResponse.json();
-
-                learnerId =
-                    newLearners[0].id;
-
-                learnersImported++;
-
-            } else {
-
-                learnerId =
-                    existing[0].id;
-            }
-
-            /* IMPORT 9 LEARNING AREAS */
-
-            for (let j = 0;
-                 j < learningAreas.length;
-                 j++) {
-
-                const points =
-                    parseInt(cells[j + 2], 10);
-
-                if (isNaN(points)) {
-                    continue;
-                }
-
-                let rubricCode = "";
-
-                if (points === 1) {
-                    rubricCode = "BE2";
-                } else if (points === 2) {
-                    rubricCode = "BE1";
-                } else if (points === 3) {
-                    rubricCode = "AE2";
-                } else if (points === 4) {
-                    rubricCode = "AE1";
-                } else if (points === 5) {
-                    rubricCode = "ME2";
-                } else if (points === 6) {
-                    rubricCode = "ME1";
-                } else if (points === 7) {
-                    rubricCode = "EE2";
-                } else if (points >= 8) {
-                    rubricCode = "EE1";
-                }
-
-                const resultData = {
-                    learner_id: learnerId,
-                    learning_area:
-                        learningAreas[j],
-                    points: points,
-                    rubric_code: rubricCode,
-                    term: term,
-                    year: year
-                };
-
-                const insertResultResponse =
-                    await fetch(
-                        SUPABASE_URL +
-                        "/rest/v1/school_app_results",
-                        {
-                            method: "POST",
-                            headers: {
-                                "apikey": SUPABASE_KEY,
-                                "Authorization":
-                                    "Bearer " + SUPABASE_KEY,
-                                "Content-Type":
-                                    "application/json"
-                            },
-                            body:
-                                JSON.stringify(
-                                    resultData
-                                )
-                        }
-                    );
-
-                if (!insertResultResponse.ok) {
-                    throw new Error(
-                        await insertResultResponse.text()
-                    );
-                }
-
-                resultsImported++;
-            }
-        }
-
-        status.textContent =
-            "SUCCESS! " +
-            learnersImported +
-            " learners imported and " +
-            resultsImported +
-            " learning-area results saved.";
-
-    } catch (error) {
-
-        console.error(error);
-
-        status.textContent =
-            "IMPORT ERROR: " +
-            error.message;
-    }
-}
-</script>
-<script>
-function calculateAggregate() {
-    const table = document.querySelector("#results table");
-
-    if (!table) return;
-
-    const rows = table.querySelectorAll("tbody tr");
-
-    let aggregate = 0;
-    let count = 0;
-
-    rows.forEach(row => {
-        const cells = row.querySelectorAll("td");
-
-        if (cells.length >= 2) {
-            const points = parseInt(cells[1].textContent.trim(), 10);
-
-            if (!isNaN(points)) {
-                aggregate += points;
-                count++;
-            }
-        }
-    });
-
-    if (count === 0) return;
-
-    let rubric = "";
-
-    if (aggregate <= 9) {
-        rubric = "BE2";
-    } else if (aggregate <= 18) {
-        rubric = "BE1";
-    } else if (aggregate <= 27) {
-        rubric = "AE2";
-    } else if (aggregate <= 36) {
-        rubric = "AE1";
-    } else if (aggregate <= 45) {
-        rubric = "ME2";
-    } else if (aggregate <= 54) {
-        rubric = "ME1";
-    } else if (aggregate <= 63) {
-        rubric = "EE2";
-    } else {
-        rubric = "EE1";
-    }
-
-    const aggregatePoints = document.getElementById("aggregatePoints");
-    const aggregateRubric = document.getElementById("aggregateRubric");
-
-    if (aggregatePoints) {
-        aggregatePoints.textContent = aggregate;
-    }
-
-    if (aggregateRubric) {
-        aggregateRubric.textContent = rubric;
-    }
-}
-
-window.addEventListener("load", calculateAggregate);
-</script>
-<script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
 </body>
 </html>
