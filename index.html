@@ -5,170 +5,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DRMS - Digital Results Management System</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
+    * { box-sizing: border-box; }
 
     body {
+      margin: 0;
       min-height: 100vh;
+      font-family: Arial, sans-serif;
       background: #f4f7fb;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       padding: 20px;
     }
 
-    .container {
+    .box {
       width: 100%;
       max-width: 430px;
     }
 
-    .logo {
+    .header {
       text-align: center;
       margin-bottom: 25px;
     }
 
-    .logo h1 {
-      font-size: 30px;
+    .header h1 {
+      margin: 0;
       color: #163b65;
-      margin-bottom: 8px;
+      font-size: 32px;
     }
 
-    .logo p {
+    .header p {
       color: #666;
-      font-size: 14px;
     }
 
     .card {
       background: white;
       padding: 30px;
-      border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.08);
     }
 
-    .card h2 {
-      color: #222;
-      margin-bottom: 8px;
-    }
-
-    .subtitle {
-      color: #777;
-      font-size: 14px;
-      margin-bottom: 25px;
+    h2 {
+      margin-top: 0;
     }
 
     label {
       display: block;
-      margin-bottom: 7px;
-      font-size: 14px;
       font-weight: bold;
+      margin: 16px 0 7px;
     }
 
     input {
       width: 100%;
       padding: 13px;
-      border: 1px solid #d5dbe3;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      margin-bottom: 18px;
       font-size: 15px;
     }
 
     button {
       width: 100%;
-      padding: 13px;
-      border: none;
+      margin-top: 22px;
+      padding: 14px;
+      border: 0;
       border-radius: 8px;
       background: #163b65;
       color: white;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .parent-link {
+    #message {
+      margin-top: 15px;
       text-align: center;
-      margin-top: 20px;
-    }
-
-    .parent-link a {
-      color: #163b65;
-      text-decoration: none;
       font-size: 14px;
     }
 
-    .footer {
+    .parent {
       text-align: center;
-      margin-top: 20px;
-      color: #888;
-      font-size: 12px;
+      margin-top: 22px;
+    }
+
+    .parent a {
+      color: #163b65;
+      text-decoration: none;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="box">
 
-    <div class="logo">
-      <h1>DRMS</h1>
-      <p>Digital Results Management System</p>
-    </div>
+  <div class="header">
+    <h1>DRMS</h1>
+    <p>Digital Results Management System</p>
+  </div>
 
-    <div class="card">
+  <div class="card">
 
-      <h2>Administrator Login</h2>
+    <h2>Administrator Login</h2>
+    <p>Authorized administrators and school uploaders only.</p>
 
-      <p class="subtitle">
-        Authorized DRMS administrators and school uploaders
-      </p>
+    <form id="loginForm">
 
-      <form id="loginForm">
+      <label>Email Address</label>
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter email"
+        required
+      >
 
-        <label for="email">Email Address</label>
+      <label>Password</label>
+      <input
+        type="password"
+        id="password"
+        placeholder="Enter password"
+        required
+      >
 
-        <input
-          type="email"
-          id="email"
-          placeholder="Enter your email"
-          required
-        >
+      <button type="submit">Sign In</button>
 
-        <label for="password">Password</label>
+    </form>
 
-        <input
-          type="password"
-          id="password"
-          placeholder="Enter your password"
-          required
-        >
+    <div id="message"></div>
 
-        <button type="submit">
-          Sign In
-        </button>
-
-      </form>
-
-      <div class="parent-link">
-        <a href="#" id="parentPortal">
-          Parent Results Portal
-        </a>
-      </div>
-
-    </div>
-
-    <div class="footer">
-      © 2026 Digital Results Management System
+    <div class="parent">
+      <a href="#">Parent Results Portal</a>
     </div>
 
   </div>
 
+</div>
+
+<script>
+
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
+
+const SUPABASE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+
+const supabaseClient =
+  window.supabase.createClient(
+    https://odronoyfmxlijuuzadpc.supabase.co/rest/v1/
+    sb_publishable_HCyXJTwKQL1cbh5-4v54pQ_3vaY9zqd
+  );
+
+document
+  .getElementById("loginForm")
+  .addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const message =
+      document.getElementById("message");
+
+    message.textContent = "Signing in...";
+
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    if (error) {
+      message.textContent = error.message;
+      return;
+    }
+
+    message.textContent = "Login successful.";
+
+    window.location.href = "dashboard.html";
+
+  });
+
+</script>
+
 </body>
-</html> 
+</html>
