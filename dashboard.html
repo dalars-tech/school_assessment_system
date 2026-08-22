@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>DRMS Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f7fb;
+      color: #222;
+    }
+
+    .topbar {
+      background: #163b65;
+      color: white;
+      padding: 16px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .topbar h2 {
+      margin: 0;
+    }
+
+    .logout {
+      background: white;
+      color: #163b65;
+      border: none;
+      padding: 9px 15px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 25px;
+    }
+
+    .welcome {
+      margin-bottom: 25px;
+    }
+
+    .welcome h1 {
+      margin-bottom: 5px;
+    }
+
+    .welcome p {
+      color: #777;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns:
+        repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,.06);
+    }
+
+    .stat-card p {
+      margin: 0;
+      color: #777;
+      font-size: 14px;
+    }
+
+    .stat-card h2 {
+      margin: 8px 0 0;
+      color: #163b65;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,.06);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      color: #163b65;
+    }
+
+    .panel p {
+      color: #777;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      margin: 7px 0 15px;
+      border: 1px solid #d3d8df;
+      border-radius: 7px;
+      font-size: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 7px;
+      padding: 12px 17px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .primary {
+      background: #163b65;
+      color: white;
+    }
+
+    .secondary {
+      background: #e8eef5;
+      color: #163b65;
+    }
+
+    .upload-box {
+      border: 2px dashed #c8d2df;
+      padding: 25px;
+      text-align: center;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media(max-width: 800px) {
+
+      .cards {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width: 500px) {
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      .topbar {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <h2>DRMS</h2>
+
+  <button
+    id="logoutButton"
+    class="logout">
+    Sign Out
+  </button>
+
+</header>
+
+
+<main class="container">
+
+  <section class="welcome">
+
+    <h1 id="welcomeText">
+      DRMS Dashboard
+    </h1>
+
+    <p id="userInfo">
+      Loading account...
+    </p>
+
+  </section>
+
+
+  <!-- STATISTICS -->
+
+  <section class="cards">
+
+    <div class="stat-card">
+      <p>Schools</p>
+      <h2 id="schoolCount">0</h2>
+    </div>
+
+    <div class="stat-card">
+      <p>Learners</p>
+      <h2 id="learnerCount">0</h2>
+    </div>
+
+    <div class="stat-card">
+      <p>Results</p>
+      <h2 id="resultCount">0</h2>
+    </div>
+
+    <div class="stat-card">
+      <p>Account Type</p>
+      <h2 id="accountType">—</h2>
+    </div>
+
+  </section>
+
+
+  <!-- OWNER AREA -->
+
+  <section
+    id="ownerArea"
+    class="grid hidden">
+
+    <!-- SCHOOLS -->
+
+    <div class="panel">
+
+      <h2>Manage Schools</h2>
+
+      <p>
+        Add and manage schools using DRMS.
+      </p>
+
+      <form id="schoolForm">
+
+        <input
+          id="schoolName"
+          type="text"
+          placeholder="School name"
+          required
+        >
+
+        <button
+          class="primary"
+          type="submit">
+          Add School
+        </button>
+
+      </form>
+
+      <div
+        id="schoolMessage"
+        class="message">
+      </div>
+
+    </div>
+
+
+    <!-- UPLOADERS -->
+
+    <div class="panel">
+
+      <h2>School Uploaders</h2>
+
+      <p>
+        Authorized school staff can upload
+        their school's results.
+      </p>
+
+      <button
+        class="secondary"
+        id="uploaderButton">
+        Manage Uploaders
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- RESULTS UPLOAD -->
+
+  <section class="panel">
+
+    <h2>Upload Termly Results</h2>
+
+    <p>
+      Upload an Excel file containing
+      <strong>points only</strong>.
+    </p>
+
+    <label>Term</label>
+
+    <select id="term">
+
+      <option value="Term 1">
+        Term 1
+      </option>
+
+      <option value="Term 2">
+        Term 2
+      </option>
+
+      <option value="Term 3">
+        Term 3
+      </option>
+
+    </select>
+
+
+    <label>Academic Year</label>
+
+    <input
+      id="year"
+      type="number"
+      value="2026"
+    >
+
+
+    <div class="upload-box">
+
+      <input
+        id="excelFile"
+        type="file"
+        accept=".xlsx,.xls,.csv"
+      >
+
+      <br>
+
+      <button
+        id="validateButton"
+        class="secondary">
+        Validate Excel
+      </button>
+
+      <button
+        id="uploadButton"
+        class="primary"
+        disabled>
+        Upload Results
+      </button>
+
+    </div>
+
+
+    <div
+      id="uploadMessage"
+      class="message">
+    </div>
+
+    <div id="preview"></div>
+
+  </section>
+
+</main>
+
+
+<script>
+
+/*
+====================================================
+SUPABASE CONFIGURATION
+====================================================
+*/
+
+const SUPABASE_URL =
+  "https://odronoyfmxlijuuzadpc.supabase.co/rest/v1/";
+
+const SUPABASE_KEY =
+  "sb_publishable_HCyXJTwKQL1cbh5-4v54pQ_3vaY9zqd";
+
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/*
+====================================================
+CHECK LOGIN
+====================================================
+*/
+
+async function checkLogin() {
+
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (!session) {
+
+    window.location.href =
+      "index.html";
+
+    return null;
+  }
+
+
+  return session;
+
+}
+
+
+/*
+====================================================
+LOAD DASHBOARD
+====================================================
+*/
+
+async function loadDashboard() {
+
+  const session =
+    await checkLogin();
+
+
+  if (!session) {
+    return;
+  }
+
+
+  const user =
+    session.user;
+
+
+  document.getElementById(
+    "userInfo"
+  ).textContent =
+    user.email;
+
+
+  /*
+  Get the user's DRMS profile.
+  */
+
+  const {
+    data: profile,
+    error
+  } =
+    await supabaseClient
+      .from("drms_profiles")
+      .select(
+        "role, school_id"
+      )
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (error) {
+
+    console.error(error);
+
+    document.getElementById(
+      "userInfo"
+    ).textContent =
+      "Profile error: " +
+      error.message;
+
+    return;
+  }
+
+
+  if (!profile) {
+
+    document.getElementById(
+      "userInfo"
+    ).textContent =
+      "Your account has not yet been assigned a DRMS role.";
+
+    return;
+  }
+
+
+  /*
+  Display account type.
+  */
+
+  document.getElementById(
+    "accountType"
+  ).textContent =
+    profile.role;
+
+
+  /*
+  OWNER
+  */
+
+  if (
+    profile.role ===
+    "owner"
+  ) {
+
+    document.getElementById(
+      "welcomeText"
+    ).textContent =
+      "DRMS Owner Dashboard";
+
+
+    document.getElementById(
+      "ownerArea"
+    ).classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  /*
+  UPLOADER
+  */
+
+  if (
+    profile.role ===
+    "uploader"
+  ) {
+
+    document.getElementById(
+      "welcomeText"
+    ).textContent =
+      "School Uploader Dashboard";
+
+  }
+
+
+  /*
+  Load statistics.
+  */
+
+  await loadStatistics(
+    profile
+  );
+
+}
+
+
+/*
+====================================================
+STATISTICS
+====================================================
+*/
+
+async function loadStatistics(
+  profile
+) {
+
+  /*
+  OWNER
+  */
+
+  if (
+    profile.role ===
+    "owner"
+  ) {
+
+    const schools =
+      await supabaseClient
+        .from("schools")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        );
+
+
+    const learners =
+      await supabaseClient
+        .from("learners")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        );
+
+
+    const results =
+      await supabaseClient
+        .from("results")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        );
+
+
+    document.getElementById(
+      "schoolCount"
+    ).textContent =
+      schools.count || 0;
+
+
+    document.getElementById(
+      "learnerCount"
+    ).textContent =
+      learners.count || 0;
+
+
+    document.getElementById(
+      "resultCount"
+    ).textContent =
+      results.count || 0;
+
+  }
+
+
+  /*
+  UPLOADER
+  */
+
+  else {
+
+    const schoolId =
+      profile.school_id;
+
+
+    const learners =
+      await supabaseClient
+        .from("learners")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        )
+        .eq(
+          "school_id",
+          schoolId
+        );
+
+
+    const results =
+      await supabaseClient
+        .from("results")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        )
+        .eq(
+          "school_id",
+          schoolId
+        );
+
+
+    document.getElementById(
+      "schoolCount"
+    ).textContent =
+      "1";
+
+
+    document.getElementById(
+      "learnerCount"
+    ).textContent =
+      learners.count || 0;
+
+
+    document.getElementById(
+      "resultCount"
+    ).textContent =
+      results.count || 0;
+
+  }
+
+}
+
+
+/*
+====================================================
+ADD SCHOOL
+====================================================
+*/
+
+document
+  .getElementById(
+    "schoolForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(event) {
+
+      event.preventDefault();
+
+
+      const name =
+        document
+          .getElementById(
+            "schoolName"
+          )
+          .value
+          .trim();
+
+
+      const message =
+        document.getElementById(
+          "schoolMessage"
+        );
+
+
+      message.textContent =
+        "Adding school...";
+
+
+      const {
+        error
+      } =
+        await supabaseClient
+          .from("schools")
+          .insert({
+            name: name
+          });
+
+
+      if (error) {
+
+        message.textContent =
+          "Error: " +
+          error.message;
+
+        return;
+      }
+
+
+      message.textContent =
+        "School added successfully.";
+
+      document.getElementById(
+        "schoolName"
+      ).value = "";
+
+
+      const profile =
+        await getProfile();
+
+      if (profile) {
+
+        await loadStatistics(
+          profile
+        );
+
+      }
+
+    }
+  );
+
+
+/*
+====================================================
+GET PROFILE
+====================================================
+*/
+
+async function getProfile() {
+
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (!session) {
+    return null;
+  }
+
+
+  const {
+    data
+  } =
+    await supabaseClient
+      .from("drms_profiles")
+      .select(
+        "role, school_id"
+      )
+      .eq(
+        "id",
+        session.user.id
+      )
+      .maybeSingle();
+
+
+  return data;
+
+}
+
+
+/*
+====================================================
+LOGOUT
+====================================================
+*/
+
+document
+  .getElementById(
+    "logoutButton"
+  )
+  .addEventListener(
+    "click",
+    async function() {
+
+      await supabaseClient.auth.signOut();
+
+      window.location.href =
+        "index.html";
+
+    }
+  );
+
+
+/*
+====================================================
+START
+====================================================
+*/
+
+loadDashboard();
+
+</script>
+
+</body>
+</html>
