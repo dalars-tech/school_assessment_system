@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <title>
+    DRMS - Parent Results Portal
+  </title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f7fb;
+      color: #222;
+    }
+
+    .topbar {
+      background: #163b65;
+      color: white;
+      padding: 16px 25px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar h2 {
+      margin: 0;
+    }
+
+    .admin-link {
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 35px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 14px;
+
+      box-shadow:
+        0 6px 25px rgba(0,0,0,.07);
+
+      margin-bottom: 20px;
+    }
+
+    .card h1 {
+      margin-top: 0;
+      color: #163b65;
+    }
+
+    .description {
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    .search-grid {
+      display: grid;
+
+      grid-template-columns:
+        2fr 1fr 1fr auto;
+
+      gap: 10px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 13px;
+
+      border: 1px solid #d3d8df;
+
+      border-radius: 8px;
+
+      font-size: 14px;
+    }
+
+    button {
+      border: none;
+
+      border-radius: 8px;
+
+      padding: 13px 18px;
+
+      cursor: pointer;
+
+      font-weight: bold;
+    }
+
+    .search-button {
+      background: #163b65;
+      color: white;
+    }
+
+    .download-button {
+      background: #e8eef5;
+      color: #163b65;
+    }
+
+    #message {
+      margin-top: 15px;
+      min-height: 20px;
+
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .learner-header {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+    }
+
+    .learner-header h2 {
+      margin: 0 0 8px;
+      color: #163b65;
+    }
+
+    .learner-info {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 11px;
+
+      border-bottom:
+        1px solid #e5e7eb;
+
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #163b65;
+    }
+
+    .rubric {
+      font-weight: bold;
+      color: #163b65;
+    }
+
+    .aggregate {
+      margin-top: 20px;
+
+      padding: 18px;
+
+      background: #eef4fa;
+
+      border-radius: 10px;
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      font-weight: bold;
+    }
+
+    .aggregate-value {
+      color: #163b65;
+      font-size: 18px;
+    }
+
+    .buttons {
+      margin-top: 20px;
+      text-align: right;
+    }
+
+    @media(max-width: 700px) {
+
+      .search-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        padding: 15px;
+      }
+
+      .container {
+        margin: 20px auto;
+        padding: 12px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        padding: 8px;
+      }
+
+      .aggregate {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <h2>
+    DRMS
+  </h2>
+
+  <a
+    href="index.html"
+    class="admin-link">
+
+    Administrator Login →
+
+  </a>
+
+</header>
+
+
+
+<main class="container">
+
+
+  <!-- SEARCH -->
+
+  <section class="card">
+
+    <h1>
+      Parent Results Portal
+    </h1>
+
+    <p class="description">
+
+      Enter the learner's assessment number
+      to view the latest assessment results.
+
+    </p>
+
+
+    <form id="searchForm">
+
+      <div class="search-grid">
+
+
+        <input
+          id="assessmentNumber"
+          type="text"
+          placeholder="Assessment Number"
+          required
+        >
+
+
+        <select id="term">
+
+          <option value="Term 1">
+            Term 1
+          </option>
+
+          <option value="Term 2">
+            Term 2
+          </option>
+
+          <option value="Term 3">
+            Term 3
+          </option>
+
+        </select>
+
+
+        <input
+          id="year"
+          type="number"
+          value="2026"
+          min="2000"
+          max="2100"
+          required
+        >
+
+
+        <button
+          type="submit"
+          class="search-button">
+
+          Search
+
+        </button>
+
+      </div>
+
+    </form>
+
+
+    <div id="message"></div>
+
+  </section>
+
+
+
+  <!-- RESULTS -->
+
+  <section
+    id="resultsCard"
+    class="card hidden">
+
+
+    <div class="learner-header">
+
+      <h2 id="learnerName">
+        —
+      </h2>
+
+      <div class="learner-info">
+
+        <strong>
+          Assessment Number:
+        </strong>
+
+        <span id="displayAssessment">
+          —
+        </span>
+
+        <br>
+
+        <strong>
+          Grade:
+        </strong>
+
+        <span id="displayGrade">
+          —
+        </span>
+
+        <br>
+
+        <strong>
+          Class:
+        </strong>
+
+        <span id="displayClass">
+          —
+        </span>
+
+        <br>
+
+        <strong>
+          Term:
+        </strong>
+
+        <span id="displayTerm">
+          —
+        </span>
+
+        <br>
+
+        <strong>
+          Year:
+        </strong>
+
+        <span id="displayYear">
+          —
+        </span>
+
+      </div>
+
+    </div>
+
+
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>
+            Learning Area
+          </th>
+
+          <th>
+            Points
+          </th>
+
+          <th>
+            Rubric
+          </th>
+
+        </tr>
+
+      </thead>
+
+
+      <tbody id="resultsBody">
+
+      </tbody>
+
+    </table>
+
+
+
+    <div class="aggregate">
+
+      <span>
+        Aggregate Points
+      </span>
+
+      <span
+        id="aggregateValue"
+        class="aggregate-value">
+
+        —
+
+      </span>
+
+    </div>
+
+
+
+    <div class="buttons">
+
+      <button
+        id="downloadButton"
+        class="download-button">
+
+        Print Results
+
+      </button>
+
+    </div>
+
+
+  </section>
+
+
+</main>
+
+
+
+<script>
+
+
+/*
+==================================================
+SUPABASE CONNECTION
+==================================================
+*/
+
+const SUPABASE_URL =
+  "https://odronoyfmxlijuuzadpc.supabase.co/rest/v1/";
+
+const SUPABASE_KEY =
+  "sb_publishable_HCyXJTwKQL1cbh5-4v54pQ_3vaY9zqd";
+
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+
+/*
+==================================================
+THE NINE JSS LEARNING AREAS
+==================================================
+*/
+
+const LEARNING_AREAS = [
+
+  "Mathematics",
+
+  "English",
+
+  "Kiswahili",
+
+  "Integrated Science",
+
+  "Social Studies",
+
+  "CRE/IRE",
+
+  "Agriculture",
+
+  "Creative Arts and Sports",
+
+  "Pre-Technical Studies"
+
+];
+
+
+
+/*
+==================================================
+SEARCH
+==================================================
+*/
+
+document
+  .getElementById("searchForm")
+  .addEventListener(
+    "submit",
+    async function(event) {
+
+      event.preventDefault();
+
+
+      const assessmentNumber =
+        document
+          .getElementById(
+            "assessmentNumber"
+          )
+          .value
+          .trim();
+
+
+      const term =
+        document
+          .getElementById("term")
+          .value;
+
+
+      const year =
+        Number(
+          document
+            .getElementById("year")
+            .value
+        );
+
+
+      const message =
+        document.getElementById(
+          "message"
+        );
+
+
+      const resultsCard =
+        document.getElementById(
+          "resultsCard"
+        );
+
+
+      message.textContent =
+        "Searching for results...";
+
+      message.style.color =
+        "#555";
+
+
+      resultsCard.classList.add(
+        "hidden"
+      );
+
+
+      try {
+
+
+        /*
+        Call the secure Supabase
+        function that returns only
+        the requested learner's
+        results.
+        */
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient.rpc(
+            "get_complete_learner_report",
+            {
+              p_assessment_number:
+                assessmentNumber,
+
+              p_term:
+                term,
+
+              p_academic_year:
+                year
+            }
+          );
+
+
+        if (error) {
+
+          console.error(error);
+
+
+          message.textContent =
+            "Unable to retrieve results: " +
+            error.message;
+
+          message.style.color =
+            "#b42318";
+
+          return;
+
+        }
+
+
+        if (
+          !data ||
+          data.length === 0
+        ) {
+
+          message.textContent =
+            "No results found for this assessment number, term and year.";
+
+          message.style.color =
+            "#b42318";
+
+          return;
+
+        }
+
+
+        /*
+        The RPC returns one learner.
+        */
+
+        const learner =
+          data[0];
+
+
+        displayResults(
+          learner,
+          term,
+          year
+        );
+
+
+        message.textContent =
+          "Results found successfully.";
+
+        message.style.color =
+          "#087443";
+
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        message.textContent =
+          "Something went wrong while searching.";
+
+        message.style.color =
+          "#b42318";
+
+      }
+
+    }
+  );
+
+
+
+/*
+==================================================
+DISPLAY RESULTS
+==================================================
+*/
+
+function displayResults(
+  learner,
+  term,
+  year
+) {
+
+
+  document.getElementById(
+    "learnerName"
+  ).textContent =
+    learner.learner_name || "—";
+
+
+  document.getElementById(
+    "displayAssessment"
+  ).textContent =
+    learner.assessment_number || "—";
+
+
+  document.getElementById(
+    "displayGrade"
+  ).textContent =
+    learner.grade || "—";
+
+
+  document.getElementById(
+    "displayClass"
+  ).textContent =
+    learner.class_name || "—";
+
+
+  document.getElementById(
+    "displayTerm"
+  ).textContent =
+    term;
+
+
+  document.getElementById(
+    "displayYear"
+  ).textContent =
+    year;
+
+
+
+  const body =
+    document.getElementById(
+      "resultsBody"
+    );
+
+
+  body.innerHTML = "";
+
+
+
+  /*
+  Database column mapping
+  */
+
+  const columnMap = {
+
+    "Mathematics":
+      "mathematics",
+
+    "English":
+      "english",
+
+    "Kiswahili":
+      "kiswahili",
+
+    "Integrated Science":
+      "integrated_science",
+
+    "Social Studies":
+      "social_studies",
+
+    "CRE/IRE":
+      "cre_ire",
+
+    "Agriculture":
+      "agriculture",
+
+    "Creative Arts and Sports":
+      "creative_arts_sports",
+
+    "Pre-Technical Studies":
+      "pre_technical"
+
+  };
+
+
+
+  LEARNING_AREAS.forEach(
+    function(area) {
+
+
+      const key =
+        columnMap[area];
+
+
+      const points =
+        learner[
+          key + "_points"
+        ];
+
+
+      const rubric =
+        learner[
+          key + "_rubric"
+        ];
+
+
+      const row =
+        document.createElement(
+          "tr"
+        );
+
+
+      row.innerHTML = `
+
+        <td>
+          ${escapeHtml(area)}
+        </td>
+
+        <td>
+          ${points ?? "—"}
+        </td>
+
+        <td class="rubric">
+          ${escapeHtml(
+            rubric ?? "—"
+          )}
+        </td>
+
+      `;
+
+
+      body.appendChild(row);
+
+    }
+  );
+
+
+
+  /*
+  Aggregate
+  */
+
+  const aggregatePoints =
+    learner.aggregate_points;
+
+
+  const aggregateRubric =
+    learner.aggregate_rubric;
+
+
+  document.getElementById(
+    "aggregateValue"
+  ).textContent =
+
+    `${aggregatePoints ?? 0} / 72 — ${
+      aggregateRubric || "—"
+    }`;
+
+
+
+  resultsCard.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+
+/*
+==================================================
+PRINT RESULTS
+==================================================
+*/
+
+document
+  .getElementById(
+    "downloadButton"
+  )
+  .addEventListener(
+    "click",
+    function() {
+
+      window.print();
+
+    }
+  );
+
+
+
+/*
+==================================================
+SECURITY: HTML ESCAPE
+==================================================
+*/
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replace(
+      /[&<>"']/g,
+      function(character) {
+
+        const entities = {
+
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+
+        };
+
+        return entities[
+          character
+        ];
+
+      }
+    );
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
