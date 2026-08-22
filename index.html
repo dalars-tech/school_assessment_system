@@ -8,7 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -16,12 +18,12 @@
       font-family: Arial, sans-serif;
       background: #f4f7fb;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       padding: 20px;
     }
 
-    .box {
+    .container {
       width: 100%;
       max-width: 430px;
     }
@@ -34,143 +36,235 @@
     .header h1 {
       margin: 0;
       color: #163b65;
-      font-size: 32px;
+      font-size: 34px;
+    }
+
+    .header h2 {
+      margin: 7px 0;
+      font-size: 19px;
+      color: #222;
     }
 
     .header p {
-      color: #666;
+      margin: 0;
+      color: #777;
+      font-size: 14px;
     }
 
     .card {
       background: white;
       padding: 30px;
       border-radius: 15px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.08);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     }
 
-    h2 {
+    .card h3 {
       margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .description {
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 25px;
     }
 
     label {
       display: block;
       font-weight: bold;
-      margin: 16px 0 7px;
+      font-size: 14px;
+      margin-bottom: 7px;
     }
 
     input {
       width: 100%;
       padding: 13px;
-      border: 1px solid #ccc;
+      border: 1px solid #d3d8df;
       border-radius: 8px;
       font-size: 15px;
+      outline: none;
+      margin-bottom: 18px;
+    }
+
+    input:focus {
+      border-color: #163b65;
     }
 
     button {
       width: 100%;
-      margin-top: 22px;
-      padding: 14px;
-      border: 0;
+      padding: 13px;
+      border: none;
       border-radius: 8px;
       background: #163b65;
       color: white;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       cursor: pointer;
     }
 
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     #message {
+      min-height: 20px;
       margin-top: 15px;
       text-align: center;
       font-size: 14px;
     }
 
-    .parent {
+    .parent-link {
       text-align: center;
       margin-top: 22px;
     }
 
-    .parent a {
+    .parent-link a {
       color: #163b65;
       text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #999;
+      font-size: 12px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="box">
+<div class="container">
 
   <div class="header">
     <h1>DRMS</h1>
-    <p>Digital Results Management System</p>
+    <h2>Digital Results Management System</h2>
+    <p>Secure School Assessment Results Management</p>
   </div>
 
   <div class="card">
 
-    <h2>Administrator Login</h2>
-    <p>Authorized administrators and school uploaders only.</p>
+    <h3>Administrator Login</h3>
+
+    <p class="description">
+      Authorized DRMS administrators and school uploaders only.
+    </p>
 
     <form id="loginForm">
 
-      <label>Email Address</label>
+      <label for="email">Email Address</label>
+
       <input
         type="email"
         id="email"
-        placeholder="Enter email"
+        placeholder="Enter your email"
+        autocomplete="username"
         required
       >
 
-      <label>Password</label>
+      <label for="password">Password</label>
+
       <input
         type="password"
         id="password"
-        placeholder="Enter password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
         required
       >
 
-      <button type="submit">Sign In</button>
+      <button id="loginButton" type="submit">
+        Sign In
+      </button>
 
     </form>
 
     <div id="message"></div>
 
-    <div class="parent">
-      <a href="#">Parent Results Portal</a>
+    <div class="parent-link">
+      <a href="parent.html">
+        Parent Results Portal →
+      </a>
     </div>
 
+  </div>
+
+  <div class="footer">
+    © 2026 Digital Results Management System
   </div>
 
 </div>
 
 <script>
 
-const SUPABASE_URL = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
+/*
+  =====================================================
+  DRMS SUPABASE CONNECTION
+  =====================================================
 
-const SUPABASE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+  IMPORTANT:
+  Replace the two values below with the SAME
+  Supabase Project URL and Publishable/Anon Key
+  you already obtained from Supabase.
+
+  NEVER use the Supabase service-role/secret key here.
+*/
+
+const SUPABASE_URL =
+  "https://odronoyfmxlijuuzadpc.supabase.co/rest/v1/";
+
+const SUPABASE_KEY =
+  "sb_publishable_HCyXJTwKQL1cbh5-4v54pQ_3vaY9zqd";
+
+
+/*
+  Create Supabase client
+*/
 
 const supabaseClient =
   window.supabase.createClient(
-    https://odronoyfmxlijuuzadpc.supabase.co/rest/v1/
+    ,https://odronoyfmxlijuuzadpc.supabase.co/rest/v1/
     sb_publishable_HCyXJTwKQL1cbh5-4v54pQ_3vaY9zqd
   );
 
-document
-  .getElementById("loginForm")
-  .addEventListener("submit", async function(event) {
 
-    event.preventDefault();
+/*
+  Login
+*/
 
-    const email =
-      document.getElementById("email").value.trim();
+const loginForm =
+  document.getElementById("loginForm");
 
-    const password =
-      document.getElementById("password").value;
+const loginButton =
+  document.getElementById("loginButton");
 
-    const message =
-      document.getElementById("message");
+const message =
+  document.getElementById("message");
 
-    message.textContent = "Signing in...";
+
+loginForm.addEventListener("submit", async function(event) {
+
+  event.preventDefault();
+
+  message.textContent = "Signing in...";
+  message.style.color = "#555";
+
+  loginButton.disabled = true;
+
+  const email =
+    document.getElementById("email").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+
+  try {
 
     const { data, error } =
       await supabaseClient.auth.signInWithPassword({
@@ -178,16 +272,70 @@ document
         password: password
       });
 
+
     if (error) {
-      message.textContent = error.message;
+
+      console.error("DRMS LOGIN ERROR:", error);
+
+      message.textContent =
+        "Login failed: " + error.message;
+
+      message.style.color = "#b42318";
+
+      loginButton.disabled = false;
+
       return;
     }
 
-    message.textContent = "Login successful.";
 
-    window.location.href = "dashboard.html";
+    if (!data || !data.session) {
 
-  });
+      message.textContent =
+        "Login succeeded, but no session was created.";
+
+      message.style.color = "#b42318";
+
+      loginButton.disabled = false;
+
+      return;
+    }
+
+
+    message.textContent =
+      "Login successful. Opening dashboard...";
+
+    message.style.color = "#087443";
+
+
+    /*
+      Give Supabase a moment to save the session,
+      then open the dashboard.
+    */
+
+    setTimeout(function() {
+
+      window.location.href =
+        "dashboard.html";
+
+    }, 500);
+
+
+  } catch (error) {
+
+    console.error(
+      "DRMS UNEXPECTED ERROR:",
+      error
+    );
+
+    message.textContent =
+      "Unable to connect to the login system.";
+
+    message.style.color = "#b42318";
+
+    loginButton.disabled = false;
+  }
+
+});
 
 </script>
 
